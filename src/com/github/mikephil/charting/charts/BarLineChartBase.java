@@ -676,7 +676,11 @@ public abstract class BarLineChartBase<T extends BarLineScatterCandleData<? exte
 
             drawXLabels(getOffsetTop() + yoffset + mXLabels.mLabelHeight);
 
-        } else { // BOTH SIDED
+        }else if (mXLabels.getPosition() == XLabelPosition.TOP_INSIDE_VERTICAL) {
+
+            drawXLabels(getOffsetTop() + yoffset*2 + mXLabels.mLabelHeight);
+
+        }else { // BOTH SIDED
 
             drawXLabels(getOffsetTop() - 7);
             drawXLabels(getHeight() - mOffsetBottom + mXLabels.mLabelHeight + yoffset * 1.6f);

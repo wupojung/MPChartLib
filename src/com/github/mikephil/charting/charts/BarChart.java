@@ -16,6 +16,7 @@ import com.github.mikephil.charting.data.DataSet;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.utils.Highlight;
 import com.github.mikephil.charting.utils.Utils;
+import com.github.mikephil.charting.utils.XLabels.XLabelPosition;
 
 import java.util.ArrayList;
 
@@ -296,6 +297,20 @@ public class BarChart extends BarLineChartBase<BarData> {
 			mBarShadow.set(mBarRect.left, mOffsetTop, mBarRect.right, getHeight() - mOffsetBottom);
 		}
 	}
+	
+	@Override
+	protected void calcModulus() {
+		float[] values = new float[9];
+		mMatrixTouch.getValues(values);
+
+		//2014/11/12 新增功能:垂直顯示文字
+		if (mXLabels.getPosition() == XLabelPosition.TOP_INSIDE_VERTICAL) {
+			mXLabels.mXAxisLabelModulus = (int) Math.ceil((mCurrentData.getXValCount() * mXLabels.mLabelHeight) / (mContentRect.width() * values[Matrix.MSCALE_X]));
+		} else {
+			mXLabels.mXAxisLabelModulus = (int) Math.ceil((mCurrentData.getXValCount() * mXLabels.mLabelWidth) / (mContentRect.width() * values[Matrix.MSCALE_X]));
+		}
+
+	}
 
 	@Override
 	protected void drawXLabels(float yPos) {
@@ -312,6 +327,15 @@ public class BarChart extends BarLineChartBase<BarData> {
 			// center the text
 			if (mXLabels.isCenterXLabelsEnabled())
 				position[0] += (step / 2f);
+			
+			/*
+			 //嘗試修正: 沒有對齊的問題
+			float[] values = new float[9];
+			mMatrixTouch.getValues(values);
+			if (values[Matrix.MSCALE_X] == 1) {
+				position[0] += 0.2f;
+			}
+			*/
 
 			transformPointArray(position);
 
@@ -335,8 +359,21 @@ public class BarChart extends BarLineChartBase<BarData> {
 						position[0] += width / 2;
 					}
 				}
-
-				mDrawCanvas.drawText(label, position[0], yPos, mXLabelPaint);
+				// 2014/11/12 新增功能: 垂直顯示文字
+				if (mXLabels.getPosition() == XLabelPosition.TOP_INSIDE_VERTICAL) {
+					// 重新計算座標
+					float fTopAlign = yPos;
+					String label1 = mCurrentData.getXVals().get(i);
+					float width = Utils.calcTextWidth(mXLabelPaint, label1);
+					fTopAlign = yPos + width / 2 ;
+					// 繪圖
+					mDrawCanvas.save(); // 儲存目前狀態,以防rotate變更(PUSH)
+					mDrawCanvas.rotate(-90, position[0], fTopAlign);// 旋轉90度  注x,y 是原始的位置。
+					mDrawCanvas.drawText(label, position[0], fTopAlign, mXLabelPaint);
+					mDrawCanvas.restore();// 還原先前狀態,(POP)
+				} else {
+					mDrawCanvas.drawText(label, position[0], yPos, mXLabelPaint);
+				}
 			}
 		}
 	}
